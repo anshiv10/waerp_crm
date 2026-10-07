@@ -1,0 +1,201 @@
+{
+ "actions": [],
+ "autoname": "format:{template_name}-{language}-{wa_account}",
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "template_name",
+  "language",
+  "wa_account",
+  "category",
+  "cb_1",
+  "status",
+  "meta_template_id",
+  "quality",
+  "rejected_reason",
+  "sb_1",
+  "header_type",
+  "header_text",
+  "body",
+  "footer",
+  "buttons",
+  "sample_values",
+  "cb_2",
+  "body_param_count",
+  "header_param_count",
+  "components"
+ ],
+ "fields": [
+  {
+   "description": "Lowercase letters, numbers and underscores.",
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Template Name",
+   "reqd": 1
+  },
+  {
+   "default": "en",
+   "fieldname": "language",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Language Code",
+   "reqd": 1
+  },
+  {
+   "fieldname": "wa_account",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "WA Account",
+   "options": "WA Account",
+   "reqd": 1
+  },
+  {
+   "default": "UTILITY",
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Category",
+   "options": "UTILITY\nMARKETING\nAUTHENTICATION"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "DRAFT",
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Meta Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "meta_template_id",
+   "fieldtype": "Data",
+   "label": "Meta Template ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "quality",
+   "fieldtype": "Data",
+   "label": "Quality",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rejected_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejected Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_1",
+   "fieldtype": "Section Break",
+   "label": "Content"
+  },
+  {
+   "default": "NONE",
+   "fieldname": "header_type",
+   "fieldtype": "Select",
+   "label": "Header Type",
+   "options": "NONE\nTEXT\nIMAGE\nVIDEO\nDOCUMENT"
+  },
+  {
+   "depends_on": "eval:doc.header_type=='TEXT'",
+   "fieldname": "header_text",
+   "fieldtype": "Data",
+   "label": "Header Text"
+  },
+  {
+   "description": "Use {{1}}, {{2}} ... for variables.",
+   "fieldname": "body",
+   "fieldtype": "Text",
+   "label": "Body",
+   "reqd": 1
+  },
+  {
+   "fieldname": "footer",
+   "fieldtype": "Data",
+   "label": "Footer"
+  },
+  {
+   "description": "Meta button objects, e.g. [{\"type\":\"QUICK_REPLY\",\"text\":\"Yes\"}]",
+   "fieldname": "buttons",
+   "fieldtype": "JSON",
+   "label": "Buttons"
+  },
+  {
+   "description": "Comma-separated example values for body variables (required by Meta).",
+   "fieldname": "sample_values",
+   "fieldtype": "Small Text",
+   "label": "Sample Values"
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "body_param_count",
+   "fieldtype": "Int",
+   "label": "Body Variables",
+   "read_only": 1
+  },
+  {
+   "fieldname": "header_param_count",
+   "fieldtype": "Int",
+   "label": "Header Variables",
+   "read_only": 1
+  },
+  {
+   "fieldname": "components",
+   "fieldtype": "JSON",
+   "label": "Raw Components",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WAERP CRM",
+ "name": "WA Template",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "WA Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "WA Agent"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "template_name",
+ "track_changes": 1
+}

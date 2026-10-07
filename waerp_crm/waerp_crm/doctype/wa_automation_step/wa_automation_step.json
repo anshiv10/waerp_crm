@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "step_key",
+  "parent_step_key",
+  "branch",
+  "step_type",
+  "config"
+ ],
+ "fields": [
+  {
+   "fieldname": "step_key",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Step Key",
+   "reqd": 1
+  },
+  {
+   "description": "Leave blank for top-level steps.",
+   "fieldname": "parent_step_key",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Parent Step (Condition)"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Branch",
+   "options": "\nyes\nno"
+  },
+  {
+   "fieldname": "step_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Type",
+   "options": "send_message\nsend_buttons\nsend_list\nsend_template\nadd_tag\nremove_tag\nassign_conversation\nupdate_contact_field\ncreate_lead\ncreate_opportunity\nsend_webhook\nresolve_conversation\nstart_flow\ncondition\nwait",
+   "reqd": 1
+  },
+  {
+   "fieldname": "config",
+   "fieldtype": "Code",
+   "in_list_view": 1,
+   "label": "Config (JSON)",
+   "options": "JSON"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WAERP CRM",
+ "name": "WA Automation Step",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

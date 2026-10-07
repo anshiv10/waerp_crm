@@ -1,0 +1,147 @@
+{
+ "actions": [],
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sb_1",
+  "default_country_code",
+  "restrict_agent_visibility",
+  "auto_create_lead",
+  "lead_source",
+  "cb_1",
+  "mirror_inbound_media",
+  "webhook_log_retention_days",
+  "sb_2",
+  "opt_out_keywords",
+  "opt_out_reply",
+  "cb_2",
+  "opt_in_keywords",
+  "opt_in_reply",
+  "sb_3",
+  "allow_private_webhook_targets"
+ ],
+ "fields": [
+  {
+   "fieldname": "sb_1",
+   "fieldtype": "Section Break",
+   "label": "General"
+  },
+  {
+   "default": "91",
+   "description": "Prefixed to 10-digit local numbers when normalising phone numbers.",
+   "fieldname": "default_country_code",
+   "fieldtype": "Data",
+   "label": "Default Country Code"
+  },
+  {
+   "default": "0",
+   "fieldname": "restrict_agent_visibility",
+   "fieldtype": "Check",
+   "label": "Agents See Only Assigned & Unassigned Conversations"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_create_lead",
+   "fieldtype": "Check",
+   "label": "Auto-create Lead for Unknown Numbers"
+  },
+  {
+   "depends_on": "auto_create_lead",
+   "fieldname": "lead_source",
+   "fieldtype": "Link",
+   "label": "Lead Source",
+   "options": "Lead Source"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "mirror_inbound_media",
+   "fieldtype": "Check",
+   "label": "Save Inbound Media as Files"
+  },
+  {
+   "default": "7",
+   "fieldname": "webhook_log_retention_days",
+   "fieldtype": "Int",
+   "label": "Webhook Log Retention (Days)"
+  },
+  {
+   "fieldname": "sb_2",
+   "fieldtype": "Section Break",
+   "label": "Compliance (Opt-out)"
+  },
+  {
+   "default": "STOP\nUNSUBSCRIBE\nSTOP ALL",
+   "description": "One per line. Exact match, case-insensitive.",
+   "fieldname": "opt_out_keywords",
+   "fieldtype": "Small Text",
+   "label": "Opt-out Keywords"
+  },
+  {
+   "default": "You have been unsubscribed. Reply START to subscribe again.",
+   "fieldname": "opt_out_reply",
+   "fieldtype": "Small Text",
+   "label": "Opt-out Confirmation"
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "START\nSUBSCRIBE",
+   "fieldname": "opt_in_keywords",
+   "fieldtype": "Small Text",
+   "label": "Opt-in Keywords"
+  },
+  {
+   "default": "You are subscribed again. Welcome back!",
+   "fieldname": "opt_in_reply",
+   "fieldtype": "Small Text",
+   "label": "Opt-in Confirmation"
+  },
+  {
+   "fieldname": "sb_3",
+   "fieldtype": "Section Break",
+   "label": "Developer"
+  },
+  {
+   "default": "0",
+   "description": "Keep off in production (SSRF protection).",
+   "fieldname": "allow_private_webhook_targets",
+   "fieldtype": "Check",
+   "label": "Allow Outbound Webhooks to Private IPs"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WAERP CRM",
+ "name": "WA CRM Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "WA Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

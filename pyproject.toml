@@ -1,6 +1,6 @@
 [project]
-name = "wa_crm"
-authors = [{ name = "WA CRM" }]
+name = "waerp_crm"
+authors = [{ name = "WAERP CRM" }]
 description = "WhatsApp Cloud API CRM for ERPNext"
 requires-python = ">=3.10"
 readme = "README.md"

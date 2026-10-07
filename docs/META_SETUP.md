@@ -24,7 +24,7 @@ Do this once for every client business. Screens move around over time, but the o
    This secret is used to verify every webhook.
 6. **Webhook** — WhatsApp → *Configuration* → *Edit*:
    1. Callback URL: the **Webhook Callback URL** shown on the WA Account form, i.e.
-      `https://<site>/api/method/wa_crm.api.webhook.receive`.
+      `https://<site>/api/method/waerp_crm.api.webhook.receive`.
    2. Verify token: the same random string you saved in WA Account › Webhook Verify Token.
    3. Click *Verify and save*.
    4. Under *Webhook fields*, subscribe to: `messages`, `message_template_status_update`,

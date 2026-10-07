@@ -1,0 +1,194 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "status",
+  "wa_account",
+  "cb_1",
+  "trigger_type",
+  "keywords",
+  "match_type",
+  "case_sensitive",
+  "sb_1",
+  "entry_node_key",
+  "run_timeout_hours",
+  "cb_2",
+  "fallback_action",
+  "max_reprompts",
+  "fallback_message",
+  "sb_2",
+  "nodes",
+  "sb_3",
+  "execution_count"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nActive\nArchived"
+  },
+  {
+   "description": "Leave blank to run on every account.",
+   "fieldname": "wa_account",
+   "fieldtype": "Link",
+   "label": "WA Account",
+   "options": "WA Account"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Keyword",
+   "fieldname": "trigger_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trigger",
+   "options": "Keyword\nFirst Inbound Message\nManual"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Keyword'",
+   "description": "One per line.",
+   "fieldname": "keywords",
+   "fieldtype": "Small Text",
+   "label": "Keywords"
+  },
+  {
+   "default": "Whole Word",
+   "depends_on": "eval:doc.trigger_type=='Keyword'",
+   "fieldname": "match_type",
+   "fieldtype": "Select",
+   "label": "Match Type",
+   "options": "Exact\nContains\nWhole Word"
+  },
+  {
+   "depends_on": "eval:doc.trigger_type=='Keyword'",
+   "fieldname": "case_sensitive",
+   "fieldtype": "Check",
+   "label": "Case Sensitive"
+  },
+  {
+   "fieldname": "sb_1",
+   "fieldtype": "Section Break",
+   "label": "Behaviour"
+  },
+  {
+   "default": "start",
+   "fieldname": "entry_node_key",
+   "fieldtype": "Data",
+   "label": "Entry Node Key",
+   "reqd": 1
+  },
+  {
+   "default": "24",
+   "fieldname": "run_timeout_hours",
+   "fieldtype": "Int",
+   "label": "Abandon Run After (Hours)"
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Reprompt Then Handoff",
+   "fieldname": "fallback_action",
+   "fieldtype": "Select",
+   "label": "When Reply Doesn't Match",
+   "options": "Reprompt Then Handoff\nReprompt Then End\nHandoff\nIgnore"
+  },
+  {
+   "default": "2",
+   "fieldname": "max_reprompts",
+   "fieldtype": "Int",
+   "label": "Max Reprompts"
+  },
+  {
+   "default": "Sorry, I didn't get that. Please choose one of the options.",
+   "fieldname": "fallback_message",
+   "fieldtype": "Small Text",
+   "label": "Fallback Message"
+  },
+  {
+   "fieldname": "sb_2",
+   "fieldtype": "Section Break",
+   "label": "Nodes"
+  },
+  {
+   "fieldname": "nodes",
+   "fieldtype": "Table",
+   "label": "Nodes",
+   "options": "WA Flow Node"
+  },
+  {
+   "fieldname": "sb_3",
+   "fieldtype": "Section Break",
+   "label": "Stats"
+  },
+  {
+   "fieldname": "execution_count",
+   "fieldtype": "Int",
+   "label": "Runs Started",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WAERP CRM",
+ "name": "WA Flow",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "WA Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "WA Agent"
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

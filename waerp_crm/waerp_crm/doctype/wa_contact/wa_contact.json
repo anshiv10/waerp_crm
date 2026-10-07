@@ -1,0 +1,185 @@
+{
+ "actions": [],
+ "autoname": "WAC-.#####",
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "full_name",
+  "wa_id",
+  "bsuid",
+  "username",
+  "cb_1",
+  "opt_status",
+  "opted_out_on",
+  "source",
+  "first_seen",
+  "sb_1",
+  "contact",
+  "lead",
+  "cb_2",
+  "customer",
+  "sb_2",
+  "tags",
+  "attributes"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Full Name"
+  },
+  {
+   "description": "Digits only, with country code (e.g. 919876543210).",
+   "fieldname": "wa_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WhatsApp Number",
+   "unique": 1
+  },
+  {
+   "description": "Sent by Meta for username-only users.",
+   "fieldname": "bsuid",
+   "fieldtype": "Data",
+   "label": "Business-Scoped User ID",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "label": "WhatsApp Username",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Opted In",
+   "fieldname": "opt_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Marketing Opt Status",
+   "options": "Opted In\nOpted Out"
+  },
+  {
+   "fieldname": "opted_out_on",
+   "fieldtype": "Datetime",
+   "label": "Opted Out On",
+   "read_only": 1
+  },
+  {
+   "description": "Click-to-WhatsApp ad / campaign that brought this contact.",
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "label": "Source"
+  },
+  {
+   "fieldname": "first_seen",
+   "fieldtype": "Datetime",
+   "label": "First Seen",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_1",
+   "fieldtype": "Section Break",
+   "label": "ERP Links"
+  },
+  {
+   "fieldname": "contact",
+   "fieldtype": "Link",
+   "label": "Contact",
+   "options": "Contact"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "Lead"
+  },
+  {
+   "fieldname": "cb_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "sb_2",
+   "fieldtype": "Section Break",
+   "label": "Segmentation"
+  },
+  {
+   "fieldname": "tags",
+   "fieldtype": "Table MultiSelect",
+   "label": "Tags",
+   "options": "WA Contact Tag"
+  },
+  {
+   "description": "Free-form key/values captured by flows (vars) or set by automations.",
+   "fieldname": "attributes",
+   "fieldtype": "JSON",
+   "label": "Custom Attributes"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WAERP CRM",
+ "name": "WA Contact",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "WA Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "WA Agent",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "wa_id,full_name,customer",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "full_name",
+ "track_changes": 1
+}

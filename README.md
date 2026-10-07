@@ -1,4 +1,4 @@
-# WA CRM — WhatsApp CRM for ERPNext
+# WAERP CRM — WhatsApp CRM for ERPNext
 
 A native Frappe/ERPNext app that turns the official **WhatsApp Cloud API** into a full CRM inside ERPNext:
 shared team inbox, chatbot flows, no-code automations, template broadcasts, an AI assistant grounded in
@@ -27,8 +27,8 @@ agents · Lead/Opportunity auto-creation · Click-to-WhatsApp ad source capture 
 
 ```bash
 cd ~/frappe-bench
-bench get-app https://github.com/<you>/wa_crm.git      # private repo: use a token URL or SSH
-bench --site <site> install-app wa_crm
+bench get-app https://github.com/<you>/waerp_crm.git      # private repo: use a token URL or SSH
+bench --site <site> install-app waerp_crm
 bench --site <site> migrate
 bench restart          # workers + scheduler must be running (they are in production setups)
 ```
@@ -54,20 +54,20 @@ How everything fits together: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Frappe API keys (`Authorization: token key:secret`) of a user with WA Agent/Manager:
 
 ```
-POST /api/method/wa_crm.api.v1.send_text       phone, text
-POST /api/method/wa_crm.api.v1.send_template   phone, template, params (JSON list), header_file
-GET  /api/method/wa_crm.api.v1.conversations   status
-GET  /api/method/wa_crm.api.v1.messages        conversation
-POST /api/method/wa_crm.api.v1.start_flow      phone, flow
-POST /api/method/wa_crm.api.v1.tag             phone, tag, remove
+POST /api/method/waerp_crm.api.v1.send_text       phone, text
+POST /api/method/waerp_crm.api.v1.send_template   phone, template, params (JSON list), header_file
+GET  /api/method/waerp_crm.api.v1.conversations   status
+GET  /api/method/waerp_crm.api.v1.messages        conversation
+POST /api/method/waerp_crm.api.v1.start_flow      phone, flow
+POST /api/method/waerp_crm.api.v1.tag             phone, tag, remove
 ```
 
-Outbound webhooks (WA Webhook Endpoint) sign the body: `X-WA-CRM-Signature: sha256=<HMAC(secret, body)>`.
+Outbound webhooks (WA Webhook Endpoint) sign the body: `X-WAERP-CRM-Signature: sha256=<HMAC(secret, body)>`.
 
 ## Tests
 
 ```bash
-python -m unittest wa_crm.tests.test_core_logic -v          # pure logic, no bench needed
+python -m unittest waerp_crm.tests.test_core_logic -v          # pure logic, no bench needed
 bench --site test_site set-config allow_tests true
-bench --site test_site run-tests --app wa_crm               # end-to-end engines (Meta mocked)
+bench --site test_site run-tests --app waerp_crm               # end-to-end engines (Meta mocked)
 ```

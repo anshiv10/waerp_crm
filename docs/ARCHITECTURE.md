@@ -1,7 +1,7 @@
 # Architecture
 
 ```
-Meta Cloud API ──POST──▶ /api/method/wa_crm.api.webhook.receive
+Meta Cloud API ──POST──▶ /api/method/waerp_crm.api.webhook.receive
                           │ 1. HMAC X-Hub-Signature-256 over RAW body (any account's App Secret)
                           │ 2. insert WA Webhook Log (durable inbox)  3. enqueue  4. 200 OK in ms
                           ▼
@@ -27,7 +27,7 @@ Meta Cloud API ──POST──▶ /api/method/wa_crm.api.webhook.receive
                 24h rule · opt-out (marketing) · WA Message log · Graph API · realtime → inbox
 ```
 
-## Data model (30 DocTypes, module "WA CRM")
+## Data model (30 DocTypes, module "WAERP CRM")
 
 | Area | DocTypes |
 |---|---|
