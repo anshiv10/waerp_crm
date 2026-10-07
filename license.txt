@@ -1,0 +1,4 @@
+Copyright (c) 2026. All rights reserved.
+
+Proprietary software. Licensed to customers under a separate commercial license.
+This repository is provided as a working ERPNext app; redistribution requires written permission.

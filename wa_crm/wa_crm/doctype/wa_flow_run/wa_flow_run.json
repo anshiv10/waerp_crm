@@ -1,0 +1,139 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-07 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "flow",
+  "wa_contact",
+  "conversation",
+  "cb_1",
+  "status",
+  "current_node_key",
+  "reprompt_count",
+  "last_activity_at",
+  "ended_reason",
+  "sb_1",
+  "vars",
+  "events"
+ ],
+ "fields": [
+  {
+   "fieldname": "flow",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Flow",
+   "options": "WA Flow",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "wa_contact",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "WA Contact",
+   "options": "WA Contact",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "conversation",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "options": "WA Conversation"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nCompleted\nHanded Off\nFailed\nExpired",
+   "search_index": 1
+  },
+  {
+   "fieldname": "current_node_key",
+   "fieldtype": "Data",
+   "label": "Current Node"
+  },
+  {
+   "fieldname": "reprompt_count",
+   "fieldtype": "Int",
+   "label": "Reprompts"
+  },
+  {
+   "fieldname": "last_activity_at",
+   "fieldtype": "Datetime",
+   "label": "Last Activity"
+  },
+  {
+   "fieldname": "ended_reason",
+   "fieldtype": "Data",
+   "label": "End Reason"
+  },
+  {
+   "fieldname": "sb_1",
+   "fieldtype": "Section Break",
+   "label": "State"
+  },
+  {
+   "fieldname": "vars",
+   "fieldtype": "JSON",
+   "label": "Variables"
+  },
+  {
+   "fieldname": "events",
+   "fieldtype": "Table",
+   "label": "Events",
+   "options": "WA Flow Run Event"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WA CRM",
+ "name": "WA Flow Run",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "WA Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "WA Agent"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
