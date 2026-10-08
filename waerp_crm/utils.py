@@ -276,3 +276,36 @@ def add_note(conversation: str, text: str, user: str | None = None):
     }).insert(ignore_permissions=True)
     publish("message", conversation, {"message": doc.name})
     return doc.name
+
+
+def human_owns_conversation(conversation: str, wa_contact: str | None = None, window_hours: int = 24) -> bool:
+    """True while a person owns the chat, so no bot (flow / fallback menu / AI) should talk.
+
+    Human mode starts when a bot hands off, or the chat is assigned to an agent.
+    It ends when an agent marks the chat Resolved or un-pauses the bot (bot_resumed_at),
+    or `window_hours` after the handoff with no assignment.
+    """
+    conv = frappe.db.get_value("WA Conversation", conversation,
+                               ["assigned_to", "bot_resumed_at", "wa_contact", "ai_autoreply_disabled"],
+                               as_dict=True)
+    if not conv:
+        return False
+    resumed = get_datetime(conv.bot_resumed_at) if conv.bot_resumed_at else None
+    handed = frappe.db.get_value("WA Flow Run", {"wa_contact": wa_contact or conv.wa_contact, "status": "Handed Off"},
+                                 "modified", order_by="modified desc")
+    if handed and (not resumed or get_datetime(handed) > resumed) and \
+            get_datetime(handed) > add_to_date(now_datetime(), hours=-window_hours):
+        return True
+    if conv.assigned_to:
+        last_agent = frappe.db.get_value("WA Message", {"conversation": conversation, "direction": "Outbound",
+                                                        "source": "Agent"}, "timestamp", order_by="timestamp desc")
+        if not resumed or (last_agent and get_datetime(last_agent) > resumed):
+            return True
+    return False
+
+
+def resume_bots(conversation: str):
+    """End human mode: bots (flows, fallback menu, AI auto-reply) may talk again."""
+    frappe.db.set_value("WA Conversation", conversation, {
+        "bot_resumed_at": now_datetime(), "ai_autoreply_disabled": 0, "ai_reply_count": 0,
+    }, update_modified=False)

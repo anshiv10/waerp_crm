@@ -174,20 +174,20 @@ def _fallback_allowed(flow_name: str, ctx) -> bool:
     and (b) the contact hasn't had this flow within its cooldown window."""
     if _keyword_automation_matches(ctx):
         return False
-    # Never interrupt a chat a human owns: assigned, or recently handed off by a bot.
-    if frappe.db.get_value("WA Conversation", ctx.conversation, "assigned_to"):
+    # Never interrupt a chat a human owns (assigned / handed off and not yet resolved).
+    from waerp_crm.utils import human_owns_conversation
+    if human_owns_conversation(ctx.conversation, ctx.wa_contact):
         return False
     hours = frappe.db.get_value("WA Flow", flow_name, "fallback_cooldown_hours")
     hours = 24 if hours is None else int(hours)
-    window = add_to_date(now_datetime(), hours=-(hours or 24))
-    if frappe.db.exists("WA Flow Run", {"wa_contact": ctx.wa_contact, "status": "Handed Off",
-                                        "modified": (">", window)}):
-        return False
     if hours <= 0:
         return True
+    since = add_to_date(now_datetime(), hours=-hours)
+    resumed = frappe.db.get_value("WA Conversation", ctx.conversation, "bot_resumed_at")
+    if resumed and get_datetime(resumed) > since:
+        since = get_datetime(resumed)
     recent = frappe.db.exists("WA Flow Run", {
-        "flow": flow_name, "wa_contact": ctx.wa_contact,
-        "creation": (">", add_to_date(now_datetime(), hours=-hours)),
+        "flow": flow_name, "wa_contact": ctx.wa_contact, "creation": (">", since),
     })
     return not recent
 
@@ -264,7 +264,8 @@ def _handle_reply(flow, run, ctx) -> dict:
         _send_prompt(run, node, prefix=prefix)
         return {"consumed": True, "outcome": "reprompted"}
     if action == "handoff":
-        _handoff(run, {"note": f"Customer replies didn't match '{node['node_key']}' in flow {flow.title}."})
+        _handoff(run, {"note": f"Customer replies didn't match '{node['node_key']}' in flow {flow.title}.",
+                       "text": flow.handoff_message})
         return {"consumed": True, "outcome": "handed_off"}
     _end(run, "Completed", "fallback_end")
     return {"consumed": True, "outcome": "ended"}

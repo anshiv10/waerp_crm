@@ -29,6 +29,7 @@
   "ai_reply_count",
   "cb_3",
   "ai_handoff_summary",
+  "bot_resumed_at",
   "sb_3",
   "reference_doctype",
   "reference_name"
@@ -192,6 +193,13 @@
    "read_only": 1
   },
   {
+   "description": "Set when an agent resolves the chat or un-pauses the bot; ends human mode.",
+   "fieldname": "bot_resumed_at",
+   "fieldtype": "Datetime",
+   "label": "Bots Resumed At",
+   "read_only": 1
+  },
+  {
    "fieldname": "sb_3",
    "fieldtype": "Section Break",
    "label": "Reference"
@@ -210,7 +218,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-07 12:00:00.000000",
+ "modified": "2026-10-09 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA Conversation",

@@ -19,6 +19,9 @@ class WAConversation(Document):
 			frappe.enqueue("waerp_crm.engines.automations.fire_conversation_event", queue="short",
 				trigger_type="Conversation Assigned", conversation=self.name, enqueue_after_commit=True)
 		if self.status == "Resolved" and before.status != "Resolved":
+			from waerp_crm.utils import resume_bots
+
+			resume_bots(self.name)
 			emit("conversation.resolved", {"conversation": self.name})
 			frappe.enqueue("waerp_crm.engines.automations.fire_conversation_event", queue="short",
 				trigger_type="Conversation Resolved", conversation=self.name, enqueue_after_commit=True)

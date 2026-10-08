@@ -69,7 +69,10 @@ def dispatch_ai_reply(ctx):
         return
     conv = frappe.db.get_value("WA Conversation", ctx.conversation,
                                ["assigned_to", "ai_autoreply_disabled", "ai_reply_count", "wa_account"], as_dict=True)
-    if not conv or conv.assigned_to or conv.ai_autoreply_disabled:
+    if not conv or conv.ai_autoreply_disabled:
+        return
+    from waerp_crm.utils import human_owns_conversation
+    if human_owns_conversation(ctx.conversation, ctx.wa_contact):
         return
     cap = s.max_auto_replies or 5
     if (conv.ai_reply_count or 0) >= cap or _rate_limited(s.requests_per_minute):

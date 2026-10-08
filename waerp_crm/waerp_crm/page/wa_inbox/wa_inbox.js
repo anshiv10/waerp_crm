@@ -132,7 +132,8 @@ class WAInbox {
 			<div class="wa-thread-head">
 				<div><b>${esc(d.contact.full_name || d.contact.wa_id)}</b>
 					<span class="text-muted small">+${esc(d.contact.wa_id || "")}</span>
-					${d.active_flow ? `<span class="indicator-pill blue">${__("Bot")}: ${esc(d.active_flow.flow)}</span>` : ""}</div>
+					${d.active_flow ? `<span class="indicator-pill blue">${__("Bot")}: ${esc(d.active_flow.flow)}</span>` : ""}
+					${d.human_mode ? `<span class="indicator-pill orange" title="${__("Bots are quiet. Mark Resolved or untick 'Paused' to resume them.")}">👤 ${__("Human mode")}</span>` : ""}</div>
 				<div class="btn-group">
 					${["Open", "Pending", "Resolved"].map((s) =>
 						`<button class="btn btn-xs ${c.status === s ? "btn-primary" : "btn-default"}" data-status="${s}">${__(s)}</button>`).join("")}

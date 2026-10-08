@@ -72,7 +72,13 @@ def get_conversation(conversation: str, before: str | None = None, limit: int = 
                     "attributes": frappe.parse_json(contact.attributes) or {}},
         "active_flow": frappe.db.get_value("WA Flow Run", {"wa_contact": conv.wa_contact, "status": "Active"},
                                            ["name", "flow", "current_node_key"], as_dict=True),
+        "human_mode": _human_mode(conv),
     }
+
+
+def _human_mode(conv) -> bool:
+    from waerp_crm.utils import human_owns_conversation
+    return bool(conv.ai_autoreply_disabled) or human_owns_conversation(conv.name, conv.wa_contact)
 
 
 @frappe.whitelist()
@@ -174,8 +180,11 @@ def set_status(conversation: str, status: str):
 @frappe.whitelist()
 def toggle_ai(conversation: str, paused: int):
     _can(conversation)
-    frappe.db.set_value("WA Conversation", conversation, {"ai_autoreply_disabled": int(paused),
-                                                          **({"ai_reply_count": 0} if not int(paused) else {})})
+    if int(paused):
+        frappe.db.set_value("WA Conversation", conversation, "ai_autoreply_disabled", 1)
+    else:
+        from waerp_crm.utils import resume_bots
+        resume_bots(conversation)
 
 
 @frappe.whitelist()
