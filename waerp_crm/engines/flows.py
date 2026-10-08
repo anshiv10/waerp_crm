@@ -157,17 +157,23 @@ def _find_entry_flow(ctx):
     return None
 
 
-def _fallback_allowed(flow_name: str, ctx) -> bool:
-    """Start the catch-all flow only if (a) no keyword automation will answer this message
-    and (b) the contact hasn't had this flow within its cooldown window."""
+def _keyword_automation_matches(ctx) -> bool:
     from waerp_crm.engines.automations import trigger_matches
 
     for name in frappe.get_all(
         "WA Automation", filters={"is_active": 1, "trigger_type": "Keyword Match"},
         or_filters=[["wa_account", "=", ctx.account], ["wa_account", "is", "not set"]], pluck="name",
     ):
-        if trigger_matches(frappe.get_cached_doc("WA Automation", name), "Keyword Match", ctx):
-            return False
+        if trigger_matches(frappe.get_doc("WA Automation", name), "Keyword Match", ctx):
+            return True
+    return False
+
+
+def _fallback_allowed(flow_name: str, ctx) -> bool:
+    """Start the catch-all flow only if (a) no keyword automation will answer this message
+    and (b) the contact hasn't had this flow within its cooldown window."""
+    if _keyword_automation_matches(ctx):
+        return False
     # Never interrupt a chat a human owns: assigned, or recently handed off by a bot.
     if frappe.db.get_value("WA Conversation", ctx.conversation, "assigned_to"):
         return False
@@ -239,6 +245,12 @@ def _handle_reply(flow, run, ctx) -> dict:
         outcome = _advance(flow, run, next_key)
         return {"consumed": True, "run": run.name, "outcome": outcome}
 
+    # Customer asked something a keyword automation answers (e.g. "price") instead of tapping
+    # a button: step aside so the automation replies, rather than nagging with the menu.
+    if ntype in ("send_buttons", "send_list") and ctx.text and _keyword_automation_matches(ctx):
+        _end(run, "Completed", "keyword_automation_took_over")
+        return {"consumed": False, "outcome": "yielded_to_automation"}
+
     # ---- fallback policy
     run.reprompt_count = (run.reprompt_count or 0) + 1
     action = logic.decide_fallback(flow.fallback_action, run.reprompt_count, flow.max_reprompts)
@@ -248,11 +260,8 @@ def _handle_reply(flow, run, ctx) -> dict:
         return {"consumed": False, "outcome": "ignored"}
     if action == "reprompt":
         _save(run)
-        from waerp_crm.whatsapp.outbound import send_text
-        if invalid_text or flow.fallback_message:
-            send_text(run.conversation, logic.interpolate(invalid_text or flow.fallback_message, _ns(run)),
-                      source="Flow", raise_on_error=False)
-        _send_prompt(run, node)
+        prefix = logic.interpolate(invalid_text or flow.fallback_message or "", _ns(run)).strip()
+        _send_prompt(run, node, prefix=prefix)
         return {"consumed": True, "outcome": "reprompted"}
     if action == "handoff":
         _handoff(run, {"note": f"Customer replies didn't match '{node['node_key']}' in flow {flow.title}."})
@@ -392,15 +401,22 @@ def _erp_lookup(run, cfg: dict, ns: dict) -> str | None:
     return cfg.get("not_found_node_key") or cfg.get("next_node_key")
 
 
-def _send_prompt(run, node: dict):
+def _send_prompt(run, node: dict, prefix: str = ""):
+    """Send a suspending node's prompt. `prefix` (e.g. "Sorry, I didn't get that.") is merged
+    into the same message so a re-ask is one bubble, not two."""
     from waerp_crm.whatsapp.outbound import send_buttons, send_list, send_text
     cfg, ns = node["config"], _ns(run)
+
+    def body(text):
+        text = logic.interpolate(text, ns)
+        return f"{prefix}\n\n{text}" if prefix else text
+
     if node["node_type"] == "send_buttons":
-        send_buttons(run.conversation, cfg, text=logic.interpolate(cfg.get("text"), ns))
+        send_buttons(run.conversation, cfg, text=body(cfg.get("text"))[:1024])
     elif node["node_type"] == "send_list":
-        send_list(run.conversation, cfg, text=logic.interpolate(cfg.get("text"), ns))
+        send_list(run.conversation, cfg, text=body(cfg.get("text"))[:4096])
     else:
-        send_text(run.conversation, logic.interpolate(cfg.get("prompt_text"), ns), source="Flow")
+        send_text(run.conversation, body(cfg.get("prompt_text")), source="Flow")
 
 
 def _handoff(run, cfg: dict):
