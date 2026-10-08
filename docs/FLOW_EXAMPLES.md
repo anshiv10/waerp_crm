@@ -36,6 +36,13 @@ The flow is checked when you save it. That includes missing or unknown targets, 
 button and row limits, duplicate reply ids, and loops that never wait for the customer. Problems
 block activation.
 
+### Catch-all welcome (any message)
+Set a flow's trigger to **Any Message (Fallback)** to greet anyone who writes something no keyword flow or keyword automation handles. Typically you point it at the same menu nodes.
+- **Restart Fallback After (Hours)**, default 24, stops it from interrupting normal chats with a contact more than once in that window.
+- It never starts while a conversation is assigned to an agent, or soon after a bot handed the chat to a human.
+
+Priority order: active run → exact keyword (restart) → keyword flows → first-inbound flows → fallback flow → keyword automations → away message → AI.
+
 ## 2. Automations
 
 **Welcome new contacts, then follow up 1 day later if they're not tagged "Customer"**

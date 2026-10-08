@@ -76,6 +76,30 @@ def get_conversation(conversation: str, before: str | None = None, limit: int = 
 
 
 @frappe.whitelist()
+def sync_state(conversation: str | None = None):
+    """Cheap change fingerprints for the inbox's fallback sync (used when realtime is down).
+
+    `list` changes when any conversation gets a new message / unread / status / assignment;
+    `thread` changes when a message is added or its status / reaction / media changes.
+    """
+    import hashlib
+
+    row = frappe.db.sql(
+        """select max(modified), max(last_message_at), coalesce(sum(unread_count), 0), count(*)
+           from `tabWA Conversation`"""
+    )[0]
+    out = {"list": "|".join(str(x) for x in row), "thread": None}
+    if conversation and frappe.has_permission("WA Conversation", "read", conversation):
+        msgs = frappe.db.sql(
+            """select name, status, coalesce(reaction, ''), coalesce(media_file, '')
+               from `tabWA Message` where conversation = %s order by creation desc limit 60""",
+            conversation,
+        )
+        out["thread"] = hashlib.md5(repr(msgs).encode()).hexdigest()
+    return out
+
+
+@frappe.whitelist()
 def mark_read(conversation: str):
     _can(conversation, "read")
     frappe.db.set_value("WA Conversation", conversation, "unread_count", 0, update_modified=False)

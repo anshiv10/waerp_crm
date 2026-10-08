@@ -7,11 +7,24 @@ from frappe.model.document import Document
 from frappe.utils import get_url
 
 
+def public_base_url() -> str:
+	"""The address Meta must call. Prefer the site's host_name as configured (without the
+	dev-server port Frappe appends in developer mode, and without a redundant :443)."""
+	host = (frappe.conf.get("host_name") or "").strip().rstrip("/")
+	if host:
+		if not host.startswith(("http://", "https://")):
+			host = "https://" + host
+		if host.startswith("https://") and host.endswith(":443"):
+			host = host[: -len(":443")]
+		return host
+	return get_url().rstrip("/")
+
+
 class WAAccount(Document):
 	def validate(self):
 		self.phone_number_id = (self.phone_number_id or "").strip()
 		self.waba_id = (self.waba_id or "").strip()
-		self.webhook_url = get_url("/api/method/waerp_crm.api.webhook.receive")
+		self.webhook_url = public_base_url() + "/api/method/waerp_crm.api.webhook.receive"
 		if self.is_default:
 			frappe.db.sql("update `tabWA Account` set is_default=0 where name!=%s", self.name)
 		users = [a.user for a in self.agents]

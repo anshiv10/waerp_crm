@@ -150,7 +150,40 @@ def _find_entry_flow(ctx):
                 return f
         elif f.trigger_type == "First Inbound Message" and ctx.is_first_inbound:
             return f
+    # Lowest priority: a catch-all welcome/menu flow for any other message.
+    for f in flows:
+        if f.trigger_type == "Any Message (Fallback)" and _fallback_allowed(f.name, ctx):
+            return f
     return None
+
+
+def _fallback_allowed(flow_name: str, ctx) -> bool:
+    """Start the catch-all flow only if (a) no keyword automation will answer this message
+    and (b) the contact hasn't had this flow within its cooldown window."""
+    from waerp_crm.engines.automations import trigger_matches
+
+    for name in frappe.get_all(
+        "WA Automation", filters={"is_active": 1, "trigger_type": "Keyword Match"},
+        or_filters=[["wa_account", "=", ctx.account], ["wa_account", "is", "not set"]], pluck="name",
+    ):
+        if trigger_matches(frappe.get_cached_doc("WA Automation", name), "Keyword Match", ctx):
+            return False
+    # Never interrupt a chat a human owns: assigned, or recently handed off by a bot.
+    if frappe.db.get_value("WA Conversation", ctx.conversation, "assigned_to"):
+        return False
+    hours = frappe.db.get_value("WA Flow", flow_name, "fallback_cooldown_hours")
+    hours = 24 if hours is None else int(hours)
+    window = add_to_date(now_datetime(), hours=-(hours or 24))
+    if frappe.db.exists("WA Flow Run", {"wa_contact": ctx.wa_contact, "status": "Handed Off",
+                                        "modified": (">", window)}):
+        return False
+    if hours <= 0:
+        return True
+    recent = frappe.db.exists("WA Flow Run", {
+        "flow": flow_name, "wa_contact": ctx.wa_contact,
+        "creation": (">", add_to_date(now_datetime(), hours=-hours)),
+    })
+    return not recent
 
 
 def _exact_keyword_flow(ctx) -> str | None:

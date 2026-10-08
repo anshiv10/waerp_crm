@@ -26,6 +26,36 @@ class WAInbox {
 		this.load_list();
 		frappe.realtime.doctype_subscribe("WA Conversation");
 		frappe.realtime.on("waerp_crm_event", (e) => this.on_event(e));
+		this.start_sync();
+	}
+
+	// Live updates normally arrive over Frappe realtime (socket.io). When the socket is not
+	// connected (e.g. desk opened through a tunnel/proxy, or a dev bench whose socket port is
+	// not reachable) we fall back to a cheap poll every 4 s; with a live socket it is only a
+	// 30 s safety net. Re-rendering happens only when the server-side fingerprint changes.
+	start_sync() {
+		const tick = async () => {
+			try {
+				const on_page = (frappe.get_route_str() || "").startsWith("wa-inbox");
+				const live = frappe.realtime.socket && frappe.realtime.socket.connected;
+				const due = !live || Date.now() - (this.last_poll || 0) > 30000;
+				if (on_page && !document.hidden && due) {
+					this.last_poll = Date.now();
+					const conv = this.state.current;
+					const s = await frappe.xcall(API + "sync_state", { conversation: conv });
+					if (this.sig_list !== undefined && s.list !== this.sig_list) this.load_list();
+					if (conv && conv === this.state.current && this.sig_thread !== undefined && s.thread !== this.sig_thread) {
+						this.open(conv, true);
+					}
+					this.sig_list = s.list;
+					if (conv === this.state.current) this.sig_thread = s.thread;
+				}
+			} catch (e) {
+				// network hiccup: try again on the next tick
+			}
+			setTimeout(tick, 4000);
+		};
+		setTimeout(tick, 4000);
 	}
 
 	render_shell() {
@@ -78,18 +108,26 @@ class WAInbox {
 			</div>`).join("") : `<div class="wa-empty" style="padding:20px">${__("No conversations")}</div>`);
 	}
 
-	async open(name) {
+	async open(name, silent) {
+		if (name !== this.state.current) this.sig_thread = undefined;
 		this.state.current = name;
 		this.$list.find(".wa-item").removeClass("active");
 		this.$list.find(`[data-name="${name}"]`).addClass("active");
 		this.state.data = await call("get_conversation", { conversation: name });
 		this.render_thread();
 		this.render_side();
-		call("mark_read", { conversation: name }).then(() => this.load_list());
+		if (!silent || this.state.data.conversation.unread_count) {
+			call("mark_read", { conversation: name }).then(() => this.load_list());
+		}
 	}
 
 	render_thread() {
 		const d = this.state.data, c = d.conversation;
+		// keep whatever the agent was typing when the thread refreshes in the background
+		const draft = this.rendered_conv === c.name ? this.$main.find("textarea").val() : "";
+		const was_at_bottom = !this.$thread || this.rendered_conv !== c.name ||
+			this.$thread[0].scrollHeight - this.$thread.scrollTop() - this.$thread.innerHeight() < 80;
+		this.rendered_conv = c.name;
 		this.$main.html(`
 			<div class="wa-thread-head">
 				<div><b>${esc(d.contact.full_name || d.contact.wa_id)}</b>
@@ -114,8 +152,9 @@ class WAInbox {
 			</div>`);
 		this.$thread = this.$main.find(".wa-thread");
 		this.$thread.html(d.messages.map((m) => this.bubble(m)).join(""));
-		this.scroll();
+		if (was_at_bottom) this.scroll();
 		const $ta = this.$main.find("textarea");
+		if (draft) $ta.val(draft);
 		this.$main.find("[data-status]").on("click", (e) =>
 			call("set_status", { conversation: c.name, status: $(e.currentTarget).data("status") }).then(() => this.open(c.name)));
 		this.$main.find(".wa-send").on("click", () => this.send($ta));
