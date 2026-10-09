@@ -7,6 +7,7 @@
   "enabled",
   "provider",
   "model",
+  "base_url",
   "api_key",
   "cb_1",
   "max_tokens",
@@ -37,14 +38,21 @@
    "fieldname": "provider",
    "fieldtype": "Select",
    "label": "Provider",
-   "options": "Anthropic\nOpenAI"
+   "options": "Anthropic\nOpenAI\nGemini (Google)\nOpenAI-Compatible"
   },
   {
    "default": "claude-haiku-4-5-20251001",
-   "description": "e.g. claude-haiku-4-5-20251001 (Anthropic) or gpt-4.1-mini (OpenAI)",
+   "description": "e.g. claude-haiku-4-5-20251001 (Anthropic), gpt-4.1-mini (OpenAI), gemini-3.8-flash (Gemini), or the model id of your OpenAI-compatible provider.",
    "fieldname": "model",
    "fieldtype": "Data",
    "label": "Model"
+  },
+  {
+   "depends_on": "eval:['Gemini (Google)','OpenAI-Compatible'].includes(doc.provider)",
+   "description": "Gemini: leave blank (uses https://generativelanguage.googleapis.com/v1beta/openai/). OpenAI-Compatible: e.g. https://api.groq.com/openai/v1/ or http://localhost:11434/v1/ (Ollama).",
+   "fieldname": "base_url",
+   "fieldtype": "Data",
+   "label": "API Base URL"
   },
   {
    "fieldname": "api_key",
@@ -154,7 +162,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-09 17:30:00.000000",
+ "modified": "2026-10-09 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA AI Settings",
