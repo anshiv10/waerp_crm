@@ -42,7 +42,7 @@
   },
   {
    "default": "claude-haiku-4-5-20251001",
-   "description": "e.g. claude-haiku-4-5-20251001 (Anthropic), gpt-4.1-mini (OpenAI), gemini-3.8-flash (Gemini), or the model id of your OpenAI-compatible provider.",
+   "description": "Exact model ID, e.g. claude-haiku-4-5-20251001, gpt-4.1-mini, gemini-3.5-flash-lite. Click 'Test AI Connection' to see the list your key can use.",
    "fieldname": "model",
    "fieldtype": "Data",
    "label": "Model"
@@ -162,7 +162,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-09 18:00:00.000000",
+ "modified": "2026-10-10 02:00:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA AI Settings",

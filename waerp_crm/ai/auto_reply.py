@@ -63,6 +63,16 @@ def _rate_limited(limit: int) -> bool:
     return count > (limit or 30)
 
 
+def _report_failure(conversation: str, err: Exception):
+    """AI call failed: nothing goes to the customer; the agent sees why, once per error, in the thread."""
+    frappe.log_error(title="WAERP CRM: AI auto-reply failed", message=frappe.get_traceback())
+    text = f"⚠ AI auto-reply failed, please reply manually. {str(err)[:400]}"
+    last_note = frappe.db.get_value("WA Message", {"conversation": conversation, "is_note": 1},
+                                    "content", order_by="creation desc")
+    if last_note != text:
+        add_note(conversation, text)
+
+
 def dispatch_ai_reply(ctx):
     s = frappe.get_cached_doc("WA AI Settings")
     if not (s.enabled and s.auto_reply_enabled):
@@ -78,19 +88,24 @@ def dispatch_ai_reply(ctx):
     if (conv.ai_reply_count or 0) >= cap or _rate_limited(s.requests_per_minute):
         return
 
+    history = _history(ctx.conversation, s.history_messages or 20)
+    turns = to_chat_turns(history)
+    if not turns:
+        return
+
     try:  # "typing..." + blue ticks while we think (best-effort)
         from waerp_crm.whatsapp.graph import GraphClient
         GraphClient(conv.wa_account).mark_read(ctx.wamid, typing=True)
     except Exception:
         pass
 
-    history = _history(ctx.conversation, s.history_messages or 20)
-    turns = to_chat_turns(history)
-    if not turns:
-        return
     knowledge = retrieve(ctx.text, s.knowledge_chunks or 5)
     erp = erp_context(ctx.wa_contact) if s.include_erp_context else ""
-    raw, usage = chat(s, build_system_prompt(s, "auto_reply", knowledge, erp), turns)
+    try:
+        raw, usage = chat(s, build_system_prompt(s, "auto_reply", knowledge, erp), turns)
+    except Exception as e:
+        _report_failure(ctx.conversation, e)
+        return
     _log_usage(ctx.conversation, "auto_reply", s, usage)
     text, handoff = parse_ai_output(raw)
 
