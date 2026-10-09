@@ -15,7 +15,8 @@
 .wa-badge { background: #25d366; color: #fff; border-radius: 10px; padding: 0 7px; font-size: 11px; }
 .wa-thread-head { padding: 10px 14px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .wa-thread { flex: 1; overflow-y: auto; padding: 14px; background: var(--bg-color); display: flex; flex-direction: column; gap: 6px; }
-.wa-msg { max-width: 72%; padding: 7px 10px; border-radius: 10px; font-size: 13px; white-space: pre-wrap; word-wrap: break-word; position: relative; }
+.wa-msg { max-width: 72%; padding: 7px 10px; border-radius: 10px; font-size: 13px; white-space: normal; word-wrap: break-word; position: relative; }
+.wa-msg .body { white-space: pre-wrap; }
 .wa-msg.in { align-self: flex-start; background: var(--card-bg); border: 1px solid var(--border-color); }
 .wa-msg.out { align-self: flex-end; background: #d9fdd3; color: #111b21; }
 .wa-msg.note { align-self: center; background: #fff7d6; color: #5c4a00; border: 1px dashed #e0c25a; max-width: 85%; }

@@ -14,6 +14,9 @@ import frappe
 from waerp_crm.core.logic import chunk_text, cosine, lexical_score
 
 
+SMALL_KB_CHARS = 8000  # ~2,000 tokens
+
+
 def index_document(name: str):
     doc = frappe.get_doc("WA Knowledge Document", name)
     frappe.db.delete("WA Knowledge Chunk", {"document": name})
@@ -50,6 +53,10 @@ def retrieve(query: str, k: int = 5) -> list[str]:
     chunks = _enabled_chunks()
     if not chunks:
         return []
+    if sum(len(c.content or "") for c in chunks) <= SMALL_KB_CHARS:
+        # A small knowledge base fits in the prompt: give the AI all of it rather than
+        # risk a search missing the one relevant line (common with short FAQs).
+        return [c.content for c in chunks]
     scored: dict[str, float] = {}
     if settings.get_password("embeddings_api_key", raise_exception=False) and any(c.embedding for c in chunks):
         try:

@@ -42,7 +42,10 @@ def build_system_prompt(s, mode: str, knowledge: list[str], erp: str) -> str:
             f"is not in the knowledge above — reply with exactly {HANDOFF_SENTINEL} and nothing else. "
             "Never invent prices, stock, dates or policies.")
     else:
-        parts.append("Draft a reply for a human agent to review and send.")
+        parts.append(
+            "Draft the next reply for a human agent to review and send. Never invent facts such as office hours, "
+            "prices, stock, dates or policies: if a needed fact is not in the knowledge or ERP facts above, write a "
+            "placeholder in square brackets for the agent to fill, e.g. [office hours].")
     return "\n\n".join(parts)
 
 

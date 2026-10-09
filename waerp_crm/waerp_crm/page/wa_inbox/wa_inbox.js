@@ -194,13 +194,14 @@ class WAInbox {
 				? `<a href="${url}" target="_blank"><img src="${url}"></a>`
 				: `<a href="${url}" target="_blank">📄 ${esc(m.filename || m.message_type)}</a>`) + (body ? "<br>" + body : "");
 		} else if (!body && m.message_type !== "text") body = `<i>[${esc(m.message_type)}]</i>`;
-		const who = m.is_note ? "📝 " + esc(frappe.user.full_name(m.sent_by) || "System")
+		const who = m.is_note ? "📝 " + esc(m.sent_by ? frappe.user.full_name(m.sent_by) : __("System"))
 			: m.direction === "Outbound" ? esc(m.source === "Agent" ? frappe.user.full_name(m.sent_by) : m.source) : "";
 		const ref = m.reference_name ? ` · <a href="/app/${frappe.router.slug(m.reference_doctype)}/${esc(m.reference_name)}">${esc(m.reference_name)}</a>` : "";
-		return `<div class="wa-msg ${cls} ${m.status === "Failed" ? "failed" : ""}" title="${esc(m.error_message || "")}">
-			${body}<div class="meta">${who ? who + " · " : ""}${m.is_ai_generated ? "✨AI · " : ""}${frappe.datetime.str_to_user(m.timestamp)}
-			${m.direction === "Outbound" && !m.is_note ? " " + (TICKS[m.status] || "") : ""}${ref}</div>
-			${m.reaction ? `<span class="reaction">${esc(m.reaction)}</span>` : ""}</div>`;
+		return `<div class="wa-msg ${cls} ${m.status === "Failed" ? "failed" : ""}" title="${esc(m.error_message || "")}">`
+			+ `<div class="body">${body}</div>`
+			+ `<div class="meta">${who ? who + " · " : ""}${m.is_ai_generated ? "✨AI · " : ""}${frappe.datetime.str_to_user(m.timestamp)}`
+			+ `${m.direction === "Outbound" && !m.is_note ? " " + (TICKS[m.status] || "") : ""}${ref}</div>`
+			+ `${m.reaction ? `<span class="reaction">${esc(m.reaction)}</span>` : ""}</div>`;
 	}
 
 	scroll() { this.$thread && this.$thread.scrollTop(this.$thread[0].scrollHeight); }
@@ -265,7 +266,10 @@ class WAInbox {
 
 	async render_side() {
 		const d = this.state.data, c = d.conversation, k = d.contact;
-		const agents = await call("get_agents", { account: c.wa_account });
+		const agents = (await call("get_agents", { account: c.wa_account })) || [];
+		if (c.assigned_to && !agents.some((a) => a.name === c.assigned_to)) {
+			agents.push({ name: c.assigned_to, full_name: frappe.user.full_name(c.assigned_to) });
+		}
 		const link = (dt, n) => n ? `<a href="/app/${frappe.router.slug(dt)}/${encodeURIComponent(n)}">${esc(n)}</a>` : "—";
 		this.$side.html(`
 			<h6>${__("Contact")}</h6>
