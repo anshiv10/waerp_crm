@@ -29,6 +29,18 @@ class WAInbox {
 		this.start_sync();
 	}
 
+	// Background call that never shows dialogs (a failed poll must not interrupt the agent).
+	async quiet_call(method, args) {
+		const res = await fetch("/api/method/" + API + method, {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Accept: "application/json",
+				"X-Frappe-CSRF-Token": frappe.csrf_token },
+			body: JSON.stringify(args || {}),
+		});
+		if (!res.ok) return null;
+		return (await res.json()).message;
+	}
+
 	// Live updates normally arrive over Frappe realtime (socket.io). When the socket is not
 	// connected (e.g. desk opened through a tunnel/proxy, or a dev bench whose socket port is
 	// not reachable) we fall back to a cheap poll every 4 s; with a live socket it is only a
@@ -42,7 +54,8 @@ class WAInbox {
 				if (on_page && !document.hidden && due) {
 					this.last_poll = Date.now();
 					const conv = this.state.current;
-					const s = await frappe.xcall(API + "sync_state", { conversation: conv });
+					const s = await this.quiet_call("sync_state", { conversation: conv });
+					if (!s) throw new Error("sync unavailable");
 					if (this.sig_list !== undefined && s.list !== this.sig_list) this.load_list();
 					if (conv && conv === this.state.current && this.sig_thread !== undefined && s.thread !== this.sig_thread) {
 						this.open(conv, true);
