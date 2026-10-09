@@ -13,6 +13,10 @@ class AIError(Exception):
 
 def chat(settings, system: str, turns: list[dict]) -> tuple[str, dict]:
     """-> (text, {'input_tokens', 'output_tokens'})"""
+    turns = [t for t in turns if (t.get("content") or "").strip()]
+    if not turns or turns[-1]["role"] != "user":
+        # Providers expect the conversation to end with the user (Gemini rejects otherwise).
+        turns = [*turns, {"role": "user", "content": "(Write the next message from us to the customer.)"}]
     key = settings.get_password("api_key", raise_exception=False)
     if not key and settings.provider != "OpenAI-Compatible":  # local servers (Ollama) need no key
         raise AIError("AI API key is not set in WA AI Settings.")
@@ -80,7 +84,7 @@ def _anthropic(key, s, system, turns):
     body = {"model": model_id(s), "max_tokens": s.max_tokens or 500, "system": system, "messages": turns}
     if s.temperature is not None:
         body["temperature"] = float(s.temperature)
-    r = requests.post("https://api.anthropic.com/v1/messages", json=body, timeout=TIMEOUT, headers={
+    r = _post("https://api.anthropic.com/v1/messages", json=body, headers={
         "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"})
     data = _json(r)
     text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
@@ -98,14 +102,14 @@ def _openai(key, s, system, turns):
     if s.temperature not in (None, ""):
         body["temperature"] = float(s.temperature)
     headers = {"Authorization": f"Bearer {key}"}
-    r = requests.post(url, json=body, timeout=TIMEOUT, headers=headers)
+    r = _post(url, json=body, headers=headers)
     if r.status_code == 400 and "temperature" in r.text:  # some reasoning models reject temperature
         body.pop("temperature", None)
-        r = requests.post(url, json=body, timeout=TIMEOUT, headers=headers)
+        r = _post(url, json=body, headers=headers)
     if r.status_code == 400 and limit_key in r.text:  # provider wants the other token-limit name
         other = "max_tokens" if limit_key == "max_completion_tokens" else "max_completion_tokens"
         body[other] = body.pop(limit_key)
-        r = requests.post(url, json=body, timeout=TIMEOUT, headers=headers)
+        r = _post(url, json=body, headers=headers)
     data = _json(r)
     text = ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
     u = data.get("usage") or {}
@@ -125,16 +129,41 @@ def embed(settings, texts: list[str]) -> list[list[float]]:
     return out
 
 
+def _error_message(data) -> str:
+    """Error text from any provider's error body: {"error": {...}}, {"error": "..."},
+    or Gemini's list form [{"error": {...}}]."""
+    if isinstance(data, list):
+        data = data[0] if data else {}
+    if not isinstance(data, dict):
+        return ""
+    err = data.get("error", data.get("message"))
+    if isinstance(err, dict):
+        return str(err.get("message") or err.get("status") or "")
+    return str(err or "")
+
+
 def _json(r: requests.Response) -> dict:
     try:
         data = r.json()
     except ValueError:
         data = {}
     if r.status_code >= 400:
-        msg = (data.get("error") or {}).get("message") if isinstance(data.get("error"), dict) else data.get("error")
-        msg = msg or r.text[:300]
-        if r.status_code in (400, 404) and "model" in str(msg).lower():
+        msg = _error_message(data) or r.text[:300] or r.reason or ""
+        if r.status_code in (400, 404) and "model" in msg.lower():
             msg += (" — the Model name is not available for this key. Open WA AI Settings and click "
                     "'Test AI Connection' to pick one from the list.")
+        elif r.status_code == 429:
+            msg += " — rate limit or quota reached at the AI provider; wait a minute (free tiers allow only a few requests per minute)."
         raise AIError(f"AI provider error {r.status_code}: {msg}")
-    return data
+    return data if isinstance(data, dict) else {}
+
+
+def _post(url: str, **kwargs) -> requests.Response:
+    """POST with one retry after a short pause when the provider is momentarily busy."""
+    import time
+
+    r = requests.post(url, timeout=TIMEOUT, **kwargs)
+    if r.status_code in (429, 500, 502, 503, 529):
+        time.sleep(3)
+        r = requests.post(url, timeout=TIMEOUT, **kwargs)
+    return r
