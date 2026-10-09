@@ -99,6 +99,9 @@ def dispatch_ai_reply(ctx):
             "ai_autoreply_disabled": 1, "ai_handoff_summary": handoff_summary(history)})
         assign_conversation(ctx.conversation, s.handoff_agent, auto=not s.handoff_agent)
         add_note(ctx.conversation, handoff_summary(history))
+        if (s.handoff_message or "").strip():
+            from waerp_crm.whatsapp.outbound import send_text
+            send_text(ctx.conversation, s.handoff_message.strip(), source="AI", is_ai=True, raise_on_error=False)
         return
 
     from waerp_crm.utils import fresh_write

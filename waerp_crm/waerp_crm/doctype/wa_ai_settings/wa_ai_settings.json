@@ -20,6 +20,7 @@
   "auto_reply_enabled",
   "max_auto_replies",
   "handoff_agent",
+  "handoff_message",
   "sb_2",
   "embeddings_api_key",
   "embeddings_model",
@@ -120,6 +121,13 @@
    "options": "User"
   },
   {
+   "default": "Let me connect you with our team, someone will reply shortly \ud83d\ude4f",
+   "description": "Sent to the customer when the AI decides a human should take over. Leave blank to send nothing.",
+   "fieldname": "handoff_message",
+   "fieldtype": "Small Text",
+   "label": "Message When AI Hands Off"
+  },
+  {
    "fieldname": "sb_2",
    "fieldtype": "Section Break",
    "label": "Knowledge Base Search"
@@ -146,7 +154,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-07 12:00:00.000000",
+ "modified": "2026-10-09 17:30:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA AI Settings",

@@ -61,7 +61,7 @@ def retrieve(query: str, k: int = 5) -> list[str]:
         except Exception:
             frappe.log_error(title="WAERP CRM: query embedding failed")
     lexical = _fulltext(query, k * 2)
-    if lexical is None:  # no FULLTEXT index (e.g. Postgres) -> portable scoring
+    if not lexical:  # no FULLTEXT index (Postgres) or no hits (tiny KBs, stop-words) -> portable scoring
         lexical = {c.name: lexical_score(query, c.content) for c in chunks}
     for name, s in lexical.items():
         scored[name] = max(scored.get(name, 0.0), s * 0.9)
