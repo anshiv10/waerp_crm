@@ -18,7 +18,7 @@ import time
 
 import frappe
 from frappe import _
-from frappe.utils import now_datetime
+from frappe.utils import add_to_date, get_datetime, now_datetime
 
 from waerp_crm.core import logic
 from waerp_crm.utils import get_or_create_conversation, get_or_create_wa_contact, norm
@@ -234,14 +234,33 @@ def recompute_counts(broadcast: str):
     })
 
 
+LOOKAHEAD_SECONDS = 150
+
+
 def process_scheduled():
-    """Scheduler, every minute: start broadcasts whose time has come."""
-    for name in frappe.get_all("WA Broadcast", filters={"status": "Scheduled", "scheduled_at": ("<=", now_datetime())},
+    """Scheduler, every minute. Frappe's minute ticks can land up to ~2 min apart, so instead
+    of waiting for a tick *after* the scheduled time, we look ahead and hand each upcoming
+    broadcast to a job that sleeps until the exact second, then starts it."""
+    horizon = add_to_date(now_datetime(), seconds=LOOKAHEAD_SECONDS)
+    for name in frappe.get_all("WA Broadcast", filters={"status": "Scheduled", "scheduled_at": ("<=", horizon)},
                                pluck="name"):
-        try:
-            queue_broadcast(name)
-        except Exception:
-            frappe.db.rollback()
-            frappe.db.set_value("WA Broadcast", name, "status", "Failed")
-            frappe.log_error(title=f"WAERP CRM: scheduled broadcast {name} failed to start")
-        frappe.db.commit()
+        frappe.enqueue("waerp_crm.engines.broadcasts.start_scheduled", queue="long", timeout=600,
+                       broadcast=name, job_id=f"wa_broadcast_start::{name}", deduplicate=True)
+
+
+def start_scheduled(broadcast: str):
+    frappe.set_user("Administrator")
+    at = frappe.db.get_value("WA Broadcast", broadcast, "scheduled_at")
+    if at:
+        wait = (get_datetime(at) - now_datetime()).total_seconds()
+        if 0 < wait <= LOOKAHEAD_SECONDS + 30:
+            time.sleep(wait)
+    if frappe.db.get_value("WA Broadcast", broadcast, "status") != "Scheduled":
+        return  # cancelled / already started meanwhile
+    try:
+        queue_broadcast(broadcast)
+    except Exception:
+        frappe.db.rollback()
+        frappe.db.set_value("WA Broadcast", broadcast, "status", "Failed")
+        frappe.log_error(title=f"WAERP CRM: scheduled broadcast {broadcast} failed to start")
+    frappe.db.commit()

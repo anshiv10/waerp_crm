@@ -53,3 +53,16 @@ class WABroadcast(Document):
 		from waerp_crm.engines.broadcasts import recompute_counts
 
 		recompute_counts(self.name)
+
+
+ACTIONS = ("start", "pause", "resume", "cancel_broadcast", "recompute")
+
+
+@frappe.whitelist()
+def run_action(name: str, action: str):
+	"""Form buttons call this by document name, so a click during a form reload can't lose the doc."""
+	if action not in ACTIONS:
+		frappe.throw(_("Unknown action"))
+	doc = frappe.get_doc("WA Broadcast", name)
+	doc.check_permission("write")
+	return getattr(doc, action)()

@@ -3,7 +3,11 @@ frappe.ui.form.on("WA Broadcast", {
 		if (frm.is_new()) return;
 		const act = (label, method, confirm) =>
 			frm.add_custom_button(label, () => {
-				const go = () => frm.call(method).then(() => frm.reload_doc());
+				const go = () => frappe.call({
+					method: "waerp_crm.waerp_crm.doctype.wa_broadcast.wa_broadcast.run_action",
+					args: { name: frm.docname, action: method },
+					freeze: true,
+				}).then(() => frm.reload_doc());
 				confirm ? frappe.confirm(confirm, go) : go();
 			});
 		const s = frm.doc.status;
@@ -17,6 +21,11 @@ frappe.ui.form.on("WA Broadcast", {
 				frappe.set_route("List", "WA Broadcast Recipient", { broadcast: frm.doc.name })
 			);
 		}
-		if (s === "Sending") setTimeout(() => frm.reload_doc(), 5000);
+		clearTimeout(frm._wa_poll);
+		if (["Scheduled", "Queued", "Sending"].includes(s)) {
+			frm._wa_poll = setTimeout(() => {
+				if (cur_frm === frm && !frm.is_dirty()) frm.reload_doc();
+			}, 5000);
+		}
 	},
 });
