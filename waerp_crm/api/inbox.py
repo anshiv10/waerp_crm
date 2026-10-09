@@ -108,7 +108,9 @@ def sync_state(conversation: str | None = None):
 @frappe.whitelist()
 def mark_read(conversation: str):
     _can(conversation, "read")
-    frappe.db.set_value("WA Conversation", conversation, "unread_count", 0, update_modified=False)
+    from waerp_crm.utils import fresh_write
+    fresh_write(lambda: frappe.db.set_value("WA Conversation", conversation, "unread_count", 0,
+                                            update_modified=False))
     last_in = frappe.db.get_value("WA Message", {"conversation": conversation, "direction": "Inbound"},
                                   ["message_id", "wa_account"], as_dict=True, order_by="timestamp desc")
     if last_in and last_in.message_id:

@@ -20,7 +20,8 @@ import frappe
 from frappe.utils import add_to_date, now_datetime
 
 from waerp_crm.core.logic import META_STATUS_MAP, MESSAGE_LADDER, is_valid_transition, split_lines
-from waerp_crm.utils import conversation_lock, get_or_create_conversation, get_or_create_wa_contact, publish, settings
+from waerp_crm.utils import (conversation_lock, fresh_write, get_or_create_conversation,
+                             get_or_create_wa_contact, publish, settings)
 
 MAX_ATTEMPTS = 5
 
@@ -227,15 +228,15 @@ def _handle_locked(account, msg, wa_contact, contact_created, conversation, conv
         return
 
     preview = parsed["content"] or f"[{parsed['message_type']}]"
-    # Atomic update: never read-modify-write a counter.
-    frappe.db.sql(
+    # Atomic update (never read-modify-write a counter), in its own fresh transaction.
+    fresh_write(lambda: frappe.db.sql(
         """update `tabWA Conversation`
            set unread_count = unread_count + 1, last_message = %(preview)s, last_message_at = %(now)s,
                last_inbound_at = %(now)s, awaiting_reply_since = coalesce(awaiting_reply_since, %(now)s),
                status = case when status = 'Resolved' then 'Open' else status end
            where name = %(name)s""",
         {"preview": preview[:300], "now": now_datetime(), "name": conversation},
-    )
+    ))
     _flag_broadcast_reply(wa_contact)
     frappe.db.commit()
 

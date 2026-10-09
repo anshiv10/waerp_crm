@@ -34,6 +34,10 @@ class WABroadcast(Document):
 	@frappe.whitelist()
 	def resume(self):
 		self._check()
+		if self.status == "Failed" and not frappe.db.exists("WA Broadcast Recipient", {"broadcast": self.name}):
+			# never got started (e.g. failed before recipients were created): back to Draft to retry
+			self.db_set({"status": "Draft", "last_error": None})
+			return {"retry": True}
 		if self.status in ("Paused", "Failed") and frappe.db.exists(
 			"WA Broadcast Recipient", {"broadcast": self.name, "status": "Pending"}
 		):

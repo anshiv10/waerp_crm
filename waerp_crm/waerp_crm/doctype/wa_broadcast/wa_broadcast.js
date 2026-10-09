@@ -13,7 +13,12 @@ frappe.ui.form.on("WA Broadcast", {
 		const s = frm.doc.status;
 		if (["Draft"].includes(s)) act(__("Send / Schedule"), "start", __("Send this broadcast now (or at the scheduled time)?"));
 		if (s === "Sending") act(__("Pause"), "pause");
-		if (["Paused", "Failed"].includes(s)) act(__("Resume"), "resume");
+		if (["Paused", "Failed"].includes(s)) act(s === "Failed" ? __("Resume / Retry") : __("Resume"), "resume");
+		if (s === "Failed" && frm.doc.last_error) {
+			frm.dashboard.set_headline_alert(
+				`<div class="text-danger">${__("Failed")}: ${frappe.utils.escape_html(frm.doc.last_error)}</div>`
+			);
+		}
 		if (["Draft", "Scheduled", "Queued", "Sending", "Paused"].includes(s)) act(__("Cancel"), "cancel_broadcast", __("Cancel this broadcast?"));
 		if (!["Draft"].includes(s)) {
 			act(__("Recompute Stats"), "recompute");

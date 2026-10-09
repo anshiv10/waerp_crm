@@ -11,7 +11,7 @@ from frappe import _
 from frappe.utils import now_datetime
 
 from waerp_crm.core.logic import build_template_components, render_template_preview
-from waerp_crm.utils import get_or_create_conversation, publish, session_open
+from waerp_crm.utils import fresh_write, get_or_create_conversation, publish, session_open
 from waerp_crm.whatsapp.graph import GraphClient, WhatsAppAPIError
 
 MARKETING_SOURCES = {"Broadcast"}
@@ -82,7 +82,7 @@ def _finish(msg, conv, call, preview: str, raise_on_error: bool):
         updates["awaiting_reply_since"] = None
         if not conv.first_response_at:
             updates["first_response_at"] = now
-    frappe.db.set_value("WA Conversation", conv.name, updates, update_modified=False)
+    fresh_write(lambda: frappe.db.set_value("WA Conversation", conv.name, updates, update_modified=False))
     publish("message", conv.name, {"message": msg.name})
 
     from waerp_crm.engines.outbound_webhooks import emit

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from contextlib import contextmanager
 
 import frappe
@@ -309,3 +310,23 @@ def resume_bots(conversation: str):
     frappe.db.set_value("WA Conversation", conversation, {
         "bot_resumed_at": now_datetime(), "ai_autoreply_disabled": 0, "ai_reply_count": 0,
     }, update_modified=False)
+
+
+def fresh_write(fn, attempts: int = 3):
+    """Run a write against a hot row (e.g. WA Conversation) safely on MariaDB 11.8+/12.
+
+    Those versions enforce snapshot isolation: writing a row that another transaction changed
+    after ours began raises error 1020 (QueryDeadlockError). We commit first so the write runs
+    in a brand-new, short transaction, and retry a couple of times if the row is busy.
+    """
+    for i in range(attempts):
+        frappe.db.commit()
+        try:
+            result = fn()
+            frappe.db.commit()
+            return result
+        except (frappe.QueryDeadlockError, frappe.QueryTimeoutError):
+            frappe.db.rollback()
+            if i == attempts - 1:
+                raise
+            time.sleep(0.3 * (i + 1))

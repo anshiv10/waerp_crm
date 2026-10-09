@@ -101,9 +101,14 @@ def dispatch_ai_reply(ctx):
         add_note(ctx.conversation, handoff_summary(history))
         return
 
-    frappe.db.sql("""update `tabWA Conversation` set ai_reply_count = ai_reply_count + 1
-                     where name=%s and ai_reply_count < %s""", (ctx.conversation, cap))
-    if not frappe.db._cursor.rowcount:
+    from waerp_crm.utils import fresh_write
+
+    def claim():
+        frappe.db.sql("""update `tabWA Conversation` set ai_reply_count = ai_reply_count + 1
+                         where name=%s and ai_reply_count < %s""", (ctx.conversation, cap))
+        return frappe.db._cursor.rowcount
+
+    if not fresh_write(claim):
         return  # lost the race for the last slot
     from waerp_crm.whatsapp.outbound import send_text
     send_text(ctx.conversation, text, source="AI", is_ai=True, raise_on_error=False)

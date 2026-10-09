@@ -122,7 +122,7 @@ def queue_broadcast(name: str):
     frappe.db.bulk_insert("WA Broadcast Recipient",
                           ["name", "creation", "modified", "owner", "modified_by", "broadcast", "wa_contact",
                            "phone", "status", "params"], rows)
-    b.db_set({"status": "Queued", "total_count": len(rows), "sent_count": 0, "delivered_count": 0, "read_count": 0,
+    b.db_set({"status": "Queued", "last_error": None, "total_count": len(rows), "sent_count": 0, "delivered_count": 0, "read_count": 0,
               "replied_count": 0, "failed_count": 0, "started_at": now, "completed_at": None})
     frappe.db.commit()
     frappe.enqueue("waerp_crm.engines.broadcasts.deliver", queue="long", timeout=6 * 3600, broadcast=b.name,
@@ -249,18 +249,37 @@ def process_scheduled():
 
 
 def start_scheduled(broadcast: str):
+    """Wait (outside any DB transaction) until the scheduled second, then start the broadcast.
+
+    MariaDB 11.8+/12 enforces snapshot isolation: a transaction that read a row and later locks
+    it fails with error 1020 if anyone saved the row in between. So we commit before sleeping,
+    re-read with a fresh snapshot afterwards, and retry briefly if the row is busy.
+    """
     frappe.set_user("Administrator")
     at = frappe.db.get_value("WA Broadcast", broadcast, "scheduled_at")
+    frappe.db.commit()  # end the read snapshot before the long wait
     if at:
         wait = (get_datetime(at) - now_datetime()).total_seconds()
         if 0 < wait <= LOOKAHEAD_SECONDS + 30:
             time.sleep(wait)
-    if frappe.db.get_value("WA Broadcast", broadcast, "status") != "Scheduled":
-        return  # cancelled / already started meanwhile
-    try:
-        queue_broadcast(broadcast)
-    except Exception:
-        frappe.db.rollback()
-        frappe.db.set_value("WA Broadcast", broadcast, "status", "Failed")
-        frappe.log_error(title=f"WAERP CRM: scheduled broadcast {broadcast} failed to start")
+
+    last_error = None
+    for _attempt in range(3):
+        frappe.db.rollback()  # fresh snapshot
+        if frappe.db.get_value("WA Broadcast", broadcast, "status") != "Scheduled":
+            return  # cancelled, or already started by another worker
+        try:
+            queue_broadcast(broadcast)
+            frappe.db.commit()
+            return
+        except (frappe.QueryDeadlockError, frappe.QueryTimeoutError) as e:
+            last_error = f"Database busy, retrying: {e}"
+            frappe.db.rollback()
+            time.sleep(2)
+        except Exception as e:
+            last_error = str(e)
+            break
+    frappe.db.rollback()
+    frappe.db.set_value("WA Broadcast", broadcast, {"status": "Failed", "last_error": (last_error or "")[:1000]})
+    frappe.log_error(title=f"WAERP CRM: scheduled broadcast {broadcast} failed to start")
     frappe.db.commit()
