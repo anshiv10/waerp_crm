@@ -14,6 +14,15 @@ class WAAISettings(Document):
 			self.model = model_id(self)
 		if self.base_url:
 			self.base_url = self.base_url.strip()
+		if self.provider == "Gemini (Google)" and self.base_url:
+			from waerp_crm.ai.providers import GEMINI_BASE, gemini_base
+
+			if gemini_base(self.base_url) == GEMINI_BASE:
+				self.base_url = ""  # native Gemini URL or the default: leave blank, the right address is built in
+				frappe.msgprint(_("API Base URL cleared: for Gemini it must stay blank (the correct address is built in)."),
+				                indicator="orange", alert=True)
+		elif self.provider in ("Anthropic", "OpenAI"):
+			self.base_url = ""
 
 	@frappe.whitelist()
 	def test_connection(self):

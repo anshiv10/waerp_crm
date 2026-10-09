@@ -25,11 +25,20 @@ def chat(settings, system: str, turns: list[dict]) -> tuple[str, dict]:
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
 
+def gemini_base(url: str | None) -> str:
+    """Only Google's OpenAI-compatible address works here; a native Gemini URL
+    (.../models/x:generateContent, .../v1beta) is replaced by the right one."""
+    url = (url or "").strip()
+    if not url or ("googleapis.com" in url and "/openai" not in url):
+        return GEMINI_BASE
+    return url
+
+
 def _base(s) -> str:
     if s.provider == "OpenAI":
         base = "https://api.openai.com/v1/"
     elif s.provider == "Gemini (Google)":
-        base = (s.get("base_url") or "").strip() or GEMINI_BASE
+        base = gemini_base(s.get("base_url"))
     else:  # OpenAI-Compatible (Groq, OpenRouter, Ollama, ...)
         base = (s.get("base_url") or "").strip()
         if not base:
