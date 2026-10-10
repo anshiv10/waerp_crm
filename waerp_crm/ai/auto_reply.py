@@ -21,8 +21,11 @@ from waerp_crm.core.logic import HANDOFF_SENTINEL, handoff_summary, parse_ai_out
 from waerp_crm.utils import add_note, assign_conversation
 
 
-def _history(conversation: str, limit: int) -> list[dict]:
-    rows = frappe.get_all("WA Message", filters={"conversation": conversation, "is_note": 0},
+def _history(conversation: str, limit: int, since=None) -> list[dict]:
+    filters = {"conversation": conversation, "is_note": 0}
+    if since:  # a resolved / resumed chat starts a fresh session for the bot
+        filters["timestamp"] = (">=", since)
+    rows = frappe.get_all("WA Message", filters=filters,
                           fields=["direction", "content", "message_type"], order_by="timestamp desc, creation desc",
                           limit=limit)
     return list(reversed(rows))
@@ -37,9 +40,11 @@ def build_system_prompt(s, mode: str, knowledge: list[str], erp: str) -> str:
         parts.append("Facts about this customer from the ERP (confidential, use only to help them):\n" + erp)
     if mode == "auto_reply":
         parts.append(
-            "You are replying automatically with no human in the loop. If you cannot confidently and safely help — "
-            "the customer asks for a human, is upset, wants to negotiate price or place a complex order, or the answer "
-            f"is not in the knowledge above — reply with exactly {HANDOFF_SENTINEL} and nothing else. "
+            "You are replying automatically with no human in the loop. Answer the customer's LATEST message. "
+            "If you cannot confidently and safely help with that latest message — the customer asks for a human, "
+            "is upset, wants to negotiate price or place a complex order, or the answer is not in the knowledge "
+            f"above — reply with exactly {HANDOFF_SENTINEL} and nothing else. Earlier messages are context only: "
+            "do not hand off because of something the customer asked earlier. "
             "Never invent prices, stock, dates or policies.")
     else:
         parts.append(
@@ -81,7 +86,8 @@ def dispatch_ai_reply(ctx):
     if not (s.enabled and s.auto_reply_enabled):
         return
     conv = frappe.db.get_value("WA Conversation", ctx.conversation,
-                               ["assigned_to", "ai_autoreply_disabled", "ai_reply_count", "wa_account"], as_dict=True)
+                               ["assigned_to", "ai_autoreply_disabled", "ai_reply_count", "wa_account", "bot_resumed_at"],
+                               as_dict=True)
     if not conv or conv.ai_autoreply_disabled:
         return
     from waerp_crm.utils import human_owns_conversation
@@ -91,7 +97,7 @@ def dispatch_ai_reply(ctx):
     if (conv.ai_reply_count or 0) >= cap or _rate_limited(s.requests_per_minute):
         return
 
-    history = _history(ctx.conversation, s.history_messages or 20)
+    history = _history(ctx.conversation, s.history_messages or 20, since=conv.bot_resumed_at)
     turns = to_chat_turns(history)
     if not turns:
         return
@@ -116,7 +122,9 @@ def dispatch_ai_reply(ctx):
         frappe.db.set_value("WA Conversation", ctx.conversation, {
             "ai_autoreply_disabled": 1, "ai_handoff_summary": handoff_summary(history)})
         assign_conversation(ctx.conversation, s.handoff_agent, auto=not s.handoff_agent)
-        add_note(ctx.conversation, handoff_summary(history))
+        reason = (_("Reason: the AI decided a person should answer the latest message.") if handoff
+                  else _("Reason: the AI returned an empty reply."))
+        add_note(ctx.conversation, handoff_summary(history) + "\n" + reason)
         if (s.handoff_message or "").strip():
             from waerp_crm.whatsapp.outbound import send_text
             send_text(ctx.conversation, s.handoff_message.strip(), source="AI", is_ai=True, raise_on_error=False)

@@ -88,6 +88,8 @@ def _anthropic(key, s, system, turns):
         "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"})
     data = _json(r)
     text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
+    if not text.strip():
+        raise AIError(f"The AI returned an empty reply (stop reason: {data.get('stop_reason') or 'unknown'}).")
     u = data.get("usage") or {}
     return text, {"input_tokens": u.get("input_tokens", 0), "output_tokens": u.get("output_tokens", 0)}
 
@@ -111,7 +113,11 @@ def _openai(key, s, system, turns):
         body[other] = body.pop(limit_key)
         r = _post(url, json=body, headers=headers)
     data = _json(r)
-    text = ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+    choice = (data.get("choices") or [{}])[0]
+    text = (choice.get("message") or {}).get("content") or ""
+    if not text.strip():
+        raise AIError(f"The AI returned an empty reply (finish reason: {choice.get('finish_reason') or 'unknown'}). "
+                      "If it says 'length', raise Max Output Tokens in WA AI Settings to 1000.")
     u = data.get("usage") or {}
     return text, {"input_tokens": u.get("prompt_tokens", 0), "output_tokens": u.get("completion_tokens", 0)}
 
