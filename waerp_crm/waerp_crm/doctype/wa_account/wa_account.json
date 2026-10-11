@@ -17,6 +17,7 @@
   "phone_number_id",
   "waba_id",
   "api_version",
+  "app_id",
   "cb_2",
   "access_token",
   "app_secret",
@@ -107,6 +108,12 @@
    "fieldtype": "Data",
    "label": "Graph API Version",
    "reqd": 1
+  },
+  {
+   "description": "Meta App ID (App Dashboard > App settings > Basic). Needed only to create media-header templates from ERPNext; filled in automatically when possible.",
+   "fieldname": "app_id",
+   "fieldtype": "Data",
+   "label": "Meta App ID"
   },
   {
    "fieldname": "cb_2",
@@ -206,7 +213,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-07 12:00:00.000000",
+ "modified": "2026-10-11 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA Account",

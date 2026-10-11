@@ -67,6 +67,26 @@ def sync_all_daily():
         frappe.log_error(title="WAERP CRM: daily template sync failed")
 
 
+SAMPLE_TYPES = {
+    "DOCUMENT": {"application/pdf"},
+    "IMAGE": {"image/jpeg", "image/jpg", "image/png"},
+    "VIDEO": {"video/mp4"},
+}
+
+
+def _upload_header_sample(doc) -> str:
+    """Upload the Header Sample File to Meta and return its handle (Meta reviews it for approval)."""
+    if not doc.header_sample:
+        frappe.throw(_("Attach a Header Sample File first: a PDF for DOCUMENT, JPG/PNG for IMAGE, MP4 for VIDEO."))
+    from waerp_crm.whatsapp.outbound import _file_bytes
+
+    content, mime, fname = _file_bytes(doc.header_sample)
+    if mime not in SAMPLE_TYPES[doc.header_type]:
+        frappe.throw(_("The Header Sample File for a {0} header must be {1} (got {2}).").format(
+            doc.header_type, " / ".join(sorted(SAMPLE_TYPES[doc.header_type])), mime))
+    return GraphClient(doc.wa_account).upload_sample(content, mime, fname or f"sample.{mime.split('/')[-1]}")
+
+
 @frappe.whitelist()
 def submit_template(name: str):
     """Create the template on Meta for approval from our WA Template doc."""
@@ -76,7 +96,8 @@ def submit_template(name: str):
     if doc.header_type == "TEXT" and doc.header_text:
         comps.append({"type": "HEADER", "format": "TEXT", "text": doc.header_text})
     elif doc.header_type in ("IMAGE", "VIDEO", "DOCUMENT"):
-        frappe.throw(_("Media-header templates must be created in Meta WhatsApp Manager (needs a sample upload); then click Sync."))
+        comps.append({"type": "HEADER", "format": doc.header_type,
+                      "example": {"header_handle": [_upload_header_sample(doc)]}})
     body = {"type": "BODY", "text": doc.body}
     n = count_placeholders(doc.body)
     if n:

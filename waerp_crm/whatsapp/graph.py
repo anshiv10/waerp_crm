@@ -190,6 +190,44 @@ class GraphClient:
             params = None  # the `next` URL already carries the query
         return out
 
+    def get_app_id(self) -> str:
+        """Meta App ID for the Resumable Upload API: the account's field, else the token's own app."""
+        app_id = (self.account.get("app_id") or "").strip()
+        if app_id:
+            return app_id
+        try:
+            app_id = str(self._request("GET", "app", params={"fields": "id"}).get("id") or "")
+        except WhatsAppAPIError:
+            app_id = ""
+        if not app_id:
+            raise WhatsAppAPIError(_("Set the Meta App ID on WA Account {0} (App Dashboard > App settings > Basic).")
+                                   .format(self.account.name))
+        frappe.db.set_value("WA Account", self.account.name, "app_id", app_id, update_modified=False)
+        return app_id
+
+    def upload_sample(self, content: bytes, mime_type: str, filename: str) -> str:
+        """Resumable Upload API -> file handle for a template's media-header example."""
+        session = self._request("POST", f"{self.get_app_id()}/uploads", params={
+            "file_name": filename, "file_length": len(content), "file_type": mime_type})
+        sid = session.get("id")
+        if not sid:
+            raise WhatsAppAPIError(_("Meta did not start the sample upload."))
+        url = f"{self.base}/{sid}"
+        try:
+            resp = requests.post(url, data=content, timeout=120,
+                                 headers={"Authorization": f"OAuth {self.token}", "file_offset": "0"})
+        except requests.RequestException as e:
+            raise WhatsAppAPIError(_("Could not reach Meta: {0}").format(e)) from e
+        try:
+            data = resp.json()
+        except ValueError:
+            data = {}
+        if resp.status_code >= 400 or not data.get("h"):
+            err = (data or {}).get("error") or {}
+            raise WhatsAppAPIError(err.get("message") or f"Sample upload failed (HTTP {resp.status_code})",
+                                   code=err.get("code"), http_status=resp.status_code)
+        return data["h"]
+
     def create_template(self, payload: dict) -> dict:
         return self._request("POST", f"{self.waba_id}/message_templates", json=payload)
 

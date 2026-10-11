@@ -17,6 +17,7 @@
   "sb_1",
   "header_type",
   "header_text",
+  "header_sample",
   "body",
   "footer",
   "buttons",
@@ -109,6 +110,13 @@
    "label": "Header Text"
   },
   {
+   "depends_on": "eval:['IMAGE','VIDEO','DOCUMENT'].includes(doc.header_type)",
+   "description": "Sample file Meta reviews for approval: a PDF for DOCUMENT, JPG/PNG for IMAGE, MP4 for VIDEO. Uploaded to Meta when you click 'Submit to Meta for Approval'. Real messages use the actual document's PDF.",
+   "fieldname": "header_sample",
+   "fieldtype": "Attach",
+   "label": "Header Sample File"
+  },
+  {
    "description": "Use {{1}}, {{2}} ... for variables.",
    "fieldname": "body",
    "fieldtype": "Text",
@@ -156,7 +164,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-07 12:00:00.000000",
+ "modified": "2026-10-11 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA Template",
