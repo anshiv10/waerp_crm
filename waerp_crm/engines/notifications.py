@@ -93,7 +93,8 @@ def send_for_rule(rule: str, doctype: str, name: str):
               for p in sorted(r.params, key=lambda p: p.position)]
     header_pdf = None
     if r.attach_print:
-        pdf = frappe.get_print(doctype, name, print_format=r.print_format or None, as_pdf=True)
+        from waerp_crm.utils import render_pdf
+        pdf = render_pdf(doctype, name, r.print_format)
         header_pdf = (pdf, f"{name}.pdf")
     party_name = doc.get("customer_name") or doc.get("contact_display") or doc.get("party_name")
     conv = conversation_for_number(phone, r.wa_account, name=party_name)
@@ -135,7 +136,8 @@ def send_document(doctype: str, name: str, template: str, phone: str | None = No
     body = frappe.parse_json(params) if params else []
     header_pdf = None
     if attach_pdf and tpl.header_type == "DOCUMENT":
-        header_pdf = (frappe.get_print(doctype, name, print_format=print_format or None, as_pdf=True), f"{name}.pdf")
+        from waerp_crm.utils import render_pdf
+        header_pdf = (render_pdf(doctype, name, print_format), f"{name}.pdf")
     conv = conversation_for_number(phone, tpl.wa_account, name=doc.get("customer_name") or doc.get("party_name"))
     msg = send_template(conv, template, body, header_pdf=header_pdf, source="Agent",
                         reference_doctype=doctype, reference_name=name)

@@ -330,3 +330,32 @@ def fresh_write(fn, attempts: int = 3):
             if i == attempts - 1:
                 raise
             time.sleep(0.3 * (i + 1))
+
+
+def _pdf_generator_for(print_format: str | None) -> str | None:
+    """The engine the Desk Print page would use: the Print Format's own choice, else Print Settings."""
+    gen = None
+    if print_format and print_format != "Standard" and frappe.db.exists("Print Format", print_format):
+        gen = frappe.db.get_value("Print Format", print_format, "pdf_generator")
+    if not gen and frappe.get_meta("Print Settings").has_field("pdf_generator"):
+        gen = frappe.db.get_single_value("Print Settings", "pdf_generator")
+    return gen or None
+
+
+def render_pdf(doctype: str, name: str, print_format: str | None = None) -> bytes:
+    """PDF of a document for WhatsApp, honouring Print Settings > PDF Generator (Frappe's
+    server-side get_print does not), and falling back to Chrome when wkhtmltopdf is missing."""
+    print_format = print_format or None
+    gen = _pdf_generator_for(print_format)
+    try:
+        return frappe.get_print(doctype, name, print_format=print_format, as_pdf=True, pdf_generator=gen)
+    except OSError as e:
+        if "wkhtmltopdf" not in str(e) or gen == "chrome":
+            raise
+        frappe.clear_last_message()
+        try:
+            return frappe.get_print(doctype, name, print_format=print_format, as_pdf=True, pdf_generator="chrome")
+        except Exception:
+            frappe.throw(_("Could not create the PDF: wkhtmltopdf is not installed and the Chrome PDF engine "
+                           "is not available. Run 'bench setup-chrome' and set Print Settings > PDF Generator "
+                           "to chrome."), title=_("PDF engine missing"))
