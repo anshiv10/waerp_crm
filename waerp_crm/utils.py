@@ -348,7 +348,17 @@ def render_pdf(doctype: str, name: str, print_format: str | None = None) -> byte
     print_format = print_format or None
     gen = _pdf_generator_for(print_format)
     try:
-        return frappe.get_print(doctype, name, print_format=print_format, as_pdf=True, pdf_generator=gen)
+        try:
+            return frappe.get_print(doctype, name, print_format=print_format, as_pdf=True, pdf_generator=gen)
+        except TimeoutError:
+            # "Chromium took too long to start": a cold first launch (e.g. after a reboot) can exceed
+            # Frappe's chromium_start_timeout (3 s by default); the second launch is warm.
+            frappe.clear_last_message()
+            return frappe.get_print(doctype, name, print_format=print_format, as_pdf=True, pdf_generator=gen)
+    except TimeoutError:
+        frappe.throw(_("Chrome took too long to start while creating the PDF. Run "
+                       "'bench set-config -g chromium_start_timeout 30', restart bench and try again."),
+                     title=_("PDF engine slow to start"))
     except OSError as e:
         if "wkhtmltopdf" not in str(e) or gen == "chrome":
             raise
