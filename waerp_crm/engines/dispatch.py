@@ -1,6 +1,7 @@
 """Engine 2 — the dispatch order. Deterministic logic always beats the LLM.
 
     inbound
+      -> ERP Assistant          registered staff numbers only (then stop)
       -> Flow engine            (active run? advance it. else maybe start one)
       -> Automations            relationship triggers always; content triggers
                                 only if no flow consumed the message
@@ -33,6 +34,12 @@ def dispatch_inbound(ctx):
     from waerp_crm.engines.automations import run_for_trigger
     from waerp_crm.engines.flows import dispatch_inbound_to_flows
     from waerp_crm.engines.outbound_webhooks import emit
+
+    # Registered staff numbers talk to the ERP Assistant, never to customer flows / bots.
+    from waerp_crm.assistant.engine import maybe_handle
+    if _safe("ERP assistant", maybe_handle, ctx):
+        frappe.db.commit()
+        return
 
     flow_result = _safe("flow dispatch", dispatch_inbound_to_flows, ctx) or {}
     consumed = bool(flow_result.get("consumed"))

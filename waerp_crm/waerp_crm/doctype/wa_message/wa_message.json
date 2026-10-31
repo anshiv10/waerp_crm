@@ -109,7 +109,7 @@
    "fieldname": "source",
    "fieldtype": "Select",
    "label": "Source",
-   "options": "Customer\nAgent\nFlow\nAutomation\nBroadcast\nAI\nNotification\nAPI\nSystem"
+   "options": "Customer\nAgent\nFlow\nAutomation\nBroadcast\nAI\nNotification\nAPI\nSystem\nAssistant"
   },
   {
    "fieldname": "sent_by",
@@ -241,7 +241,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-07 12:00:00.000000",
+ "modified": "2026-11-01 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA Message",

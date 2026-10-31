@@ -26,7 +26,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Mode",
-   "options": "auto_reply\ndraft\nsummary"
+   "options": "auto_reply\ndraft\nsummary\nerp_assistant"
   },
   {
    "fieldname": "provider",
@@ -57,7 +57,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-07 12:00:00.000000",
+ "modified": "2026-11-01 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "WAERP CRM",
  "name": "WA AI Usage Log",

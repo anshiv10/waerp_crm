@@ -1,0 +1,123 @@
+{
+ "actions": [],
+ "creation": "2026-11-01 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "phone",
+  "enabled",
+  "cb_1",
+  "can_submit",
+  "can_cancel",
+  "can_amend",
+  "can_update",
+  "sb_1",
+  "allowed_doctypes"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "ERPNext User",
+   "options": "User",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "Every search and action runs as this user, with this user's roles and permissions."
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "WhatsApp Number",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "description": "With country code, e.g. 919876543210 or +91 98765 43210."
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "can_submit",
+   "fieldtype": "Check",
+   "label": "Can Submit",
+   "default": "0"
+  },
+  {
+   "fieldname": "can_cancel",
+   "fieldtype": "Check",
+   "label": "Can Cancel",
+   "default": "0"
+  },
+  {
+   "fieldname": "can_amend",
+   "fieldtype": "Check",
+   "label": "Can Amend",
+   "default": "0"
+  },
+  {
+   "fieldname": "can_update",
+   "fieldtype": "Check",
+   "label": "Can Update Fields",
+   "default": "0"
+  },
+  {
+   "fieldname": "sb_1",
+   "fieldtype": "Section Break",
+   "label": "Limits"
+  },
+  {
+   "fieldname": "allowed_doctypes",
+   "fieldtype": "Small Text",
+   "label": "Allowed DocTypes",
+   "description": "One DocType per line (e.g. Sales Order). Blank = every DocType this ERPNext user can read. Custom DocTypes listed here can also be found by document ID alone."
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-01 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WAERP CRM",
+ "name": "WA ERP User",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "hash",
+ "naming_rule": "Random",
+ "title_field": "user",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "write": 1,
+   "role": "System Manager"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "write": 1,
+   "role": "WA Manager"
+  }
+ ],
+ "track_changes": 1
+}

@@ -161,14 +161,20 @@ def media_kind(mime: str) -> str:
 
 def send_media(conversation: str, file_url: str | None = None, link: str | None = None, caption: str | None = None,
                media_type: str | None = None, filename: str | None = None, source="Agent", raise_on_error=True,
-               **ref):
-    """Send a Frappe File (uploaded to Meta first, so private files work) or a public link."""
+               content: bytes | None = None, mime: str | None = None, **ref):
+    """Send a Frappe File (uploaded to Meta first, so private files work), raw bytes (content + mime,
+    e.g. a generated PDF), or a public link."""
     conv = _conv(conversation)
     _guard_freeform(conv, source)
     to = _recipient(conv)
     client = GraphClient(conv.wa_account)
     media_id = None
-    if file_url and not file_url.startswith("http"):
+    if content is not None:
+        mime = mime or "application/octet-stream"
+        media_type = media_type or media_kind(mime)
+        filename = filename or "file"
+        media_id = client.upload_media(content, mime, filename)
+    elif file_url and not file_url.startswith("http"):
         content, mime, fname = _file_bytes(file_url)
         media_type = media_type or media_kind(mime)
         filename = filename or fname

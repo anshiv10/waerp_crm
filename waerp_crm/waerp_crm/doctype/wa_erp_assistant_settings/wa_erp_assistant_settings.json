@@ -1,0 +1,89 @@
+{
+ "actions": [],
+ "creation": "2026-11-01 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "use_ai",
+  "command_prefix",
+  "cb_1",
+  "max_results",
+  "confirm_minutes",
+  "session_minutes"
+ ],
+ "fields": [
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enable ERP Assistant",
+   "default": "0",
+   "description": "Registered staff numbers (WA ERP User) can search ERPNext and act on documents from WhatsApp."
+  },
+  {
+   "fieldname": "use_ai",
+   "fieldtype": "Check",
+   "label": "Understand Plain Language (AI)",
+   "default": "1",
+   "description": "Uses the provider in WA AI Settings to understand free-text requests. Only the message text and document IDs are sent to the AI, never document contents. Exact commands work without AI."
+  },
+  {
+   "fieldname": "command_prefix",
+   "fieldtype": "Data",
+   "label": "Command Prefix",
+   "description": "Optional, e.g. 'erp'. When set, only messages starting with it go to the assistant, so the same number can also chat as a normal contact. Blank = every message from a registered number."
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "max_results",
+   "fieldtype": "Int",
+   "label": "Max Results per Search",
+   "default": "10",
+   "description": "1 to 10."
+  },
+  {
+   "fieldname": "confirm_minutes",
+   "fieldtype": "Int",
+   "label": "Confirmation Valid For (minutes)",
+   "default": "10"
+  },
+  {
+   "fieldname": "session_minutes",
+   "fieldtype": "Int",
+   "label": "Remember Context For (minutes)",
+   "default": "30",
+   "description": "How long 'it' and list numbers refer to the last document / list."
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-01 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WAERP CRM",
+ "name": "WA ERP Assistant Settings",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "issingle": 1,
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "WA Manager",
+   "write": 1
+  }
+ ]
+}
